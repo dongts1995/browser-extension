@@ -1,10 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Simple Login Extension",
+  "name": "Slides Extension",
   "version": "1.0",
-  "description": "A simple login popup extension",
+
   "action": {
     "default_popup": "popup.html"
   },
-  "permissions": []
+
+  "permissions": ["storage"],
+
+  "host_permissions": [
+    "https://api.portals.now/*"
+  ]
 }

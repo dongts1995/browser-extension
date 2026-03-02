@@ -2,11 +2,13 @@
     "compilerOptions": {
         "target": "ES2020",
         "module": "ESNext",
-        "strict": true,
-        "outDir": "./",
-        "noEmitOnError": true
+        "lib": [
+            "ES2020",
+            "DOM"
+        ],
+        "strict": true
     },
     "include": [
-        "popup.ts"
+        "public/**/*.ts"
     ]
 }

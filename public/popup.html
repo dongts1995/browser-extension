@@ -2,10 +2,10 @@
 <html>
 
 <head>
-  <title>Login</title>
+  <title>Login with Code</title>
   <style>
     body {
-      width: 250px;
+      width: 280px;
       padding: 15px;
       font-family: Arial;
     }
@@ -20,10 +20,16 @@
     button {
       width: 100%;
       padding: 8px;
-      background: #4285f4;
-      color: white;
+      margin-bottom: 10px;
       border: none;
       cursor: pointer;
+      background: #4285f4;
+      color: white;
+    }
+
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -32,13 +38,15 @@
 
   <h3>Login</h3>
 
-  <input type="text" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Password" />
+  <input type="email" id="email" placeholder="Enter your email" />
 
-  <button id="loginBtn">Login</button>
+  <button id="sendCodeBtn">Send Code</button>
+
+  <input type="text" id="code" placeholder="Enter verification code" />
+
+  <button id="verifyBtn">Verify</button>
 
   <script src="popup.js"></script>
-
 </body>
 
 </html>
