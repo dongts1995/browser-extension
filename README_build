@@ -1,0 +1,9 @@
+```
+npm install
+
+npm run build
+```
+
+```
+npx tsc .\public\popup.ts
+```

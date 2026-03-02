@@ -1,0 +1,14 @@
+{
+  "name": "slides-extension",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.270",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}
