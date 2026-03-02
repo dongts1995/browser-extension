@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>Login with Code</title>
+  <title>Login</title>
   <style>
     body {
       width: 280px;
@@ -27,26 +26,31 @@
       color: white;
     }
 
-    button:disabled {
-      background: #999;
-      cursor: not-allowed;
+    .hidden {
+      display: none;
     }
   </style>
 </head>
-
 <body>
 
-  <h3>Login</h3>
+  <!-- LOGIN VIEW -->
+  <div id="loginView">
+    <h3>Login</h3>
 
-  <input type="email" id="email" placeholder="Enter your email" />
+    <input type="email" id="email" placeholder="Enter your email" />
+    <button id="sendCodeBtn">Send Code</button>
 
-  <button id="sendCodeBtn">Send Code</button>
+    <input type="text" id="code" placeholder="Enter verification code" />
+    <button id="verifyBtn">Verify</button>
+  </div>
 
-  <input type="text" id="code" placeholder="Enter verification code" />
-
-  <button id="verifyBtn">Verify</button>
+  <!-- LOGGED IN VIEW -->
+  <div id="loggedInView" class="hidden">
+    <h3>Logged In</h3>
+    <p id="userEmailText"></p>
+    <button id="logoutBtn">Logout</button>
+  </div>
 
   <script src="popup.js"></script>
 </body>
-
 </html>

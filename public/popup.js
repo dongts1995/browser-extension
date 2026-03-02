@@ -1,50 +1,71 @@
 "use strict";
+const loginView = document.getElementById("loginView");
+const loggedInView = document.getElementById("loggedInView");
+const userEmailText = document.getElementById("userEmailText");
+const logoutBtn = document.getElementById("logoutBtn");
 const emailInput = document.getElementById("email");
 const codeInput = document.getElementById("code");
 const sendCodeBtn = document.getElementById("sendCodeBtn");
 const verifyBtn = document.getElementById("verifyBtn");
-/**
- * SEND LOGIN CODE
- */
+/* ===============================
+   CHECK LOGIN STATE WHEN LOAD
+================================= */
+document.addEventListener("DOMContentLoaded", async () => {
+    const result = await chrome.storage.local.get(["accessToken", "userEmail"]);
+    if (result.accessToken) {
+        showLoggedIn(result.userEmail);
+    }
+    else {
+        showLogin();
+    }
+});
+function showLogin() {
+    loginView.classList.remove("hidden");
+    loggedInView.classList.add("hidden");
+}
+function showLoggedIn(email) {
+    loginView.classList.add("hidden");
+    loggedInView.classList.remove("hidden");
+    if (email) {
+        userEmailText.innerText = `Email: ${email}`;
+    }
+}
+/* ===============================
+   LOGOUT
+================================= */
+logoutBtn.addEventListener("click", async () => {
+    await chrome.storage.local.remove(["accessToken", "userEmail"]);
+    showLogin();
+});
+/* ===============================
+   SEND CODE
+================================= */
 sendCodeBtn.addEventListener("click", async () => {
     const email = emailInput.value.trim();
     if (!email) {
         alert("Please enter your email");
         return;
     }
-    sendCodeBtn.disabled = true;
     try {
         const response = await fetch("https://api.portals.now/auth/send-login-code", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })
         });
-        const text = await response.text();
         if (response.status === 200) {
-            alert("Verification code sent to your email!");
-            console.log("Send code success:", text);
+            alert("Verification code sent!");
         }
         else {
-            let message = "Failed to send code";
-            try {
-                const err = JSON.parse(text);
-                message = err.message || message;
-            }
-            catch { }
-            alert(message);
+            alert("Failed to send code");
         }
     }
     catch (error) {
-        console.error(error);
-        alert("Network error while sending code");
+        alert("Network error");
     }
-    sendCodeBtn.disabled = false;
 });
-/**
- * VERIFY CODE
- */
+/* ===============================
+   VERIFY
+================================= */
 verifyBtn.addEventListener("click", async () => {
     const email = emailInput.value.trim();
     const code = codeInput.value.trim();
@@ -52,45 +73,26 @@ verifyBtn.addEventListener("click", async () => {
         alert("Please enter email and verification code");
         return;
     }
-    verifyBtn.disabled = true;
     try {
         const response = await fetch("https://api.portals.now/auth/login-with-code", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: email,
-                code: code
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, code })
         });
-        const text = await response.text();
         if (response.status === 200) {
-            const data = JSON.parse(text);
-            // ⚠ chỉnh theo field backend thực tế
+            const data = await response.json();
             const accessToken = data.accessToken || data.token;
-            if (accessToken) {
-                await chrome.storage.local.set({
-                    accessToken: accessToken,
-                    userEmail: email
-                });
-            }
-            alert("Login successful!");
-            console.log("Login success:", data);
+            await chrome.storage.local.set({
+                accessToken: accessToken,
+                userEmail: email
+            });
+            showLoggedIn(email);
         }
         else {
-            let message = "Verification failed";
-            try {
-                const err = JSON.parse(text);
-                message = err.message || message;
-            }
-            catch { }
-            alert(message);
+            alert("Verification failed");
         }
     }
     catch (error) {
-        console.error(error);
-        alert("Network error during verification");
+        alert("Network error");
     }
-    verifyBtn.disabled = false;
 });
