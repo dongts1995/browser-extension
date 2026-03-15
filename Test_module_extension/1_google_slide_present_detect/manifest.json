@@ -1,0 +1,25 @@
+{
+    "manifest_version": 3,
+    "name": "Google Slides Slideshow Detector",
+    "version": "1.0",
+    "description": "Detect when Google Slides presentation mode starts or stops",
+    "permissions": [
+        "tabs"
+    ],
+    "host_permissions": [
+        "https://docs.google.com/presentation/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://docs.google.com/presentation/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "Auto Google Slides",
+    "version": "1.0",
+    "description": "Auto next slide every 1 second",
+    "content_scripts": [
+        {
+            "matches": [
+                "https://docs.google.com/presentation/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
