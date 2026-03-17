@@ -90,3 +90,60 @@ export async function getActiveSlidesInfo() {
         });
     });
 }
+const presentationCache = {};
+function extractNotesFromSlide(slide) {
+    const notesPage = slide?.slideProperties?.notesPage ?? slide?.notesPage;
+    if (!notesPage)
+        return null;
+    const elements = notesPage.pageElements;
+    if (!Array.isArray(elements))
+        return null;
+    let notes = "";
+    elements.forEach((el) => {
+        if (!el.shape?.text?.textElements)
+            return;
+        el.shape.text.textElements.forEach((t) => {
+            if (t.textRun?.content) {
+                notes += t.textRun.content;
+            }
+        });
+    });
+    return notes.trim();
+}
+/**
+ * Fetches + caches presentation info (slides list with notes).
+ * Cached result is reused unless you call `invalidatePresentationCache`.
+ */
+export async function getPresentationInfo(presentationId) {
+    if (presentationCache[presentationId])
+        return presentationCache[presentationId];
+    const token = await ensureToken();
+    if (!token)
+        return null;
+    const res = await fetch(`https://slides.googleapis.com/v1/presentations/${presentationId}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    if (!res.ok) {
+        console.error("Failed to fetch presentation:", res.status, res.statusText);
+        return null;
+    }
+    const data = await res.json();
+    const slidesData = Array.isArray(data.slides) ? data.slides : [];
+    const slides = slidesData.map((slide, index) => ({
+        index,
+        objectId: slide?.objectId,
+        notes: extractNotesFromSlide(slide),
+    }));
+    const info = {
+        presentationId,
+        title: data?.title,
+        slides,
+    };
+    presentationCache[presentationId] = info;
+    return info;
+}
+export function invalidatePresentationCache(presentationId) {
+    delete presentationCache[presentationId];
+}

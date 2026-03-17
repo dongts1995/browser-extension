@@ -1,4 +1,4 @@
-﻿import { ensureToken, getActiveSlidesInfo, parseSlidesUrl } from "../api/googleAPI";
+﻿import { ensureToken, getActiveSlidesInfo, parseSlidesUrl, getPresentationInfo } from "../api/googleAPI";
 
 // Listen to webNavigation events inside the slides iframe.
 // This avoids relying on DOM mutation observers and uses "chrome signals".
@@ -15,6 +15,12 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(
       if (!info.objectId) {
         console.log("  -> parsed objectId is null (raw URL may not contain #slide)");
       }
+
+      getPresentationInfo(info.presentationId).then((presentationInfo) => {
+        if (presentationInfo) {
+          console.log("PresentationInfo:", presentationInfo);
+        }
+      });
     }
   },
   {
