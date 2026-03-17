@@ -9,6 +9,8 @@
         "strict": true
     },
     "include": [
-        "public/**/*.ts"
+        "public/**/*.ts",
+        "src/popup/popup.ts",
+        "src/**/*.ts"
     ]
 }

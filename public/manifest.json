@@ -2,14 +2,28 @@
   "manifest_version": 3,
   "name": "Slides Extension",
   "version": "1.0",
-
   "action": {
     "default_popup": "popup.html"
   },
-
-  "permissions": ["storage"],
-
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
   "host_permissions": [
+    "https://docs.google.com/presentation/*",
     "https://api.portals.now/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://docs.google.com/presentation/*"
+      ],
+      "js": [
+        "contentScript.js"
+      ]
+    }
   ]
 }

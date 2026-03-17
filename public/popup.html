@@ -36,14 +36,22 @@
 <body>
 
   <!-- LOGIN VIEW -->
-  <div id="loginView">
-    <h3>Login</h3>
+  <div id="loginView1">
+    <h3>Welcome to Portals</h3>
+    <button id="connectGoogleBtn">Connect Google</button>
+    <button id="connectMicrosoftBtn">I'm using Microsoft</button>
 
     <input type="email" id="email" placeholder="Enter your email" />
     <button id="sendCodeBtn">Send Code</button>
+  </div>
 
+  <!-- LOGIN VIEW 2 -->
+  <div id="loginView2">
+    <h3>Enter verification code</h3>
+    <p id="sentCodeEmailText">We sent a verification code to </p>
     <input type="text" id="code" placeholder="Enter verification code" />
-    <button id="verifyBtn">Verify</button>
+    <button id="verifyCodeBtn">Verify</button>
+    <button id="resendCodeBtn">Resend Code</button>
   </div>
 
   <!-- LOGGED IN VIEW -->
@@ -60,7 +68,7 @@
     <button id="logoutBtn">Logout</button>
   </div>
 
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 
 </html>
