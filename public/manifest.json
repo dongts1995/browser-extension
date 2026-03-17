@@ -14,7 +14,8 @@
   "permissions": [
     "storage",
     "tabs",
-    "identity"
+    "identity",
+    "webNavigation"
   ],
   "host_permissions": [
     "https://docs.google.com/presentation/*",

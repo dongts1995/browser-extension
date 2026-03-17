@@ -1,4 +1,4 @@
-let slideshowState = false;
+﻿let slideshowState = false;
 
 function checkSlideshow() {
   const iframe = document.querySelector("iframe.punch-present-iframe");
