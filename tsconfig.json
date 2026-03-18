@@ -6,7 +6,9 @@
             "ES2020",
             "DOM"
         ],
-        "strict": true
+        "strict": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true
     },
     "include": [
         "public/**/*.ts",
