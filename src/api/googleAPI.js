@@ -115,7 +115,8 @@ function extractNotesFromSlide(slide) {
  * Cached result is reused unless you call `invalidatePresentationCache`.
  */
 export async function getPresentationInfo(presentationId) {
-    // if (presentationCache[presentationId]) return presentationCache[presentationId];
+    if (presentationCache[presentationId])
+        return presentationCache[presentationId];
     const token = await ensureToken();
     if (!token)
         return null;
@@ -145,63 +146,4 @@ export async function getPresentationInfo(presentationId) {
 }
 export function invalidatePresentationCache(presentationId) {
     delete presentationCache[presentationId];
-}
-/**
- * Get the slide index (zero-based) by objectId for a given presentation.
- * Returns null if the objectId is not found.
- */
-export async function getSlideIndexByObjectId(presentationId, objectId) {
-    const presentationInfo = await getPresentationInfo(presentationId);
-    if (!presentationInfo)
-        return null;
-    const slide = presentationInfo.slides.find(s => s.objectId === objectId);
-    return slide ? slide.index : null;
-}
-/**
- * Get the slide thumbnail as a Base64 encoded string.
- * Returns null if the request fails.
- */
-export async function getSlideThumbnailAsBase64(presentationId, objectId) {
-    const token = await ensureToken();
-    if (!token)
-        return null;
-    const url = `https://slides.googleapis.com/v1/presentations/${presentationId}/pages/${objectId}/thumbnail`;
-    try {
-        // First, fetch the thumbnail metadata to get the contentUrl
-        const res = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        if (!res.ok) {
-            console.error("Failed to fetch thumbnail metadata:", res.status, res.statusText);
-            return null;
-        }
-        const data = await res.json();
-        // debug
-        console.log("Thumbnail metadata response:", data);
-        const contentUrl = data.contentUrl;
-        if (!contentUrl) {
-            console.error("No contentUrl in thumbnail response");
-            return null;
-        }
-        // Now, fetch the actual image from contentUrl
-        const imageRes = await fetch(contentUrl);
-        if (!imageRes.ok) {
-            console.error("Failed to fetch image:", imageRes.status, imageRes.statusText);
-            return null;
-        }
-        const buffer = await imageRes.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        const base64 = btoa(binary);
-        return base64;
-    }
-    catch (error) {
-        console.error("Error fetching thumbnail:", error);
-        return null;
-    }
 }
