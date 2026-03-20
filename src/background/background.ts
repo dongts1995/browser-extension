@@ -38,6 +38,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(
   }
 );
 
+// Handle messages from popup and content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "SLIDESHOW_STATE_CHANGED") {
     if (message.isActive) {

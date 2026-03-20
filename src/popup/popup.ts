@@ -5,8 +5,8 @@ const loginView1 = document.getElementById("loginView1") as HTMLDivElement;
 const loginView2 = document.getElementById("loginView2") as HTMLDivElement;
 const loggedInView = document.getElementById("loggedInView") as HTMLDivElement;
 //
-const connectGoogleBtn = document.getElementById("connectGoogleBtn") as HTMLButtonElement;
-const connectMicrosoftBtn = document.getElementById("connectMicrosoftBtn") as HTMLButtonElement;
+// const connectGoogleBtn = document.getElementById("connectGoogleBtn") as HTMLButtonElement;
+// const connectMicrosoftBtn = document.getElementById("connectMicrosoftBtn") as HTMLButtonElement;
 const emailInput = document.getElementById("email") as HTMLInputElement;
 const sendCodeBtn = document.getElementById("sendCodeBtn") as HTMLButtonElement;
 //
@@ -18,7 +18,17 @@ const resendCodeBtn = document.getElementById("resendCodeBtn") as HTMLButtonElem
 const userEmailText = document.getElementById("userEmailText") as HTMLParagraphElement;
 const logoutBtn = document.getElementById("logoutBtn") as HTMLButtonElement;
 const eventSelect = document.getElementById("eventSelect") as HTMLSelectElement;
-const eventIdInput = document.getElementById("eventId") as HTMLInputElement;
+const eventIdInput = document.getElementById("eventIdInput") as HTMLInputElement;
+
+
+async function updateUIState(newState: string) {
+  try {
+    await chrome.storage.local.set({ uiState: newState });
+    console.log("[Popup] UI State saved to storage:", newState);
+  } catch (err) {
+    console.warn("[Popup] failed to update UI state", err);
+  }
+}
 
 
 
@@ -28,12 +38,40 @@ const eventIdInput = document.getElementById("eventId") as HTMLInputElement;
 ================================= */
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const result = await chrome.storage.local.get(["accessToken", "userEmail"]);
+  // Get UI state from local storage
+  const storage = await chrome.storage.local.get(["uiState"]);
+  const uiState = storage.uiState || "UI_SIGNIN";
+  console.log("[Popup] UI State:", uiState);
 
-  if (result.accessToken) {
-    showLoggedIn(result.userEmail);
-  } else {
-    showLogin0();
+  switch (uiState) {
+    case "UI_SIGNIN":
+      showLogin0();
+      break;
+    case "UI_VERIFYCODE": {
+      const storageData = await chrome.storage.local.get(["userEmail"]);
+      if (!storageData.userEmail) {
+        console.warn("[Popup] userEmail not found in storage, showing login0");
+        showLogin0();
+        await updateUIState("UI_SIGNIN");
+      } else {
+        showLogin1(storageData.userEmail);
+      }
+      break;
+    }
+    case "UI_MAIN": {
+      const storageData = await chrome.storage.local.get(["userEmail", "accessToken"]);
+      if (!storageData.accessToken) {
+        console.warn("[Popup] accessToken not found, showing login0");
+        showLogin0();
+        await updateUIState("UI_SIGNIN");
+      } else {
+        showLoggedIn(storageData.userEmail);
+      }
+      break;
+    }
+    default:
+      console.warn("[Popup] Unknown UI state:", uiState);
+      showLogin0();
   }
 });
 
@@ -61,7 +99,9 @@ sendCodeBtn.addEventListener("click", async () => {
 
     if (ok) {
       alert("Verification code sent!");
+      await chrome.storage.local.set({ userEmail: email });
       showLogin1(email);
+      await updateUIState("UI_VERIFYCODE");
     } else {
       alert("Failed to send code");
     }
@@ -86,11 +126,18 @@ function showLogin1(email?: string) {
 }
 
 verifyCodeBtn.addEventListener("click", async () => {
-  const email = emailInput.value.trim();
+  const storage = await chrome.storage.local.get(["userEmail"]);
+  const email = storage?.userEmail as string | undefined;
   const code = codeInput.value.trim();
 
-  if (!email || !code) {
-    alert("Please enter email and verification code");
+  if (!email) {
+    alert("Email not found. Please try sending code again.");
+    showLogin0();
+    return;
+  }
+
+  if (!code) {
+    alert("Please enter verification code");
     return;
   }
 
@@ -104,6 +151,7 @@ verifyCodeBtn.addEventListener("click", async () => {
       });
 
       showLoggedIn(email);
+      await updateUIState("UI_MAIN");
     } else {
       alert("Verification failed");
     }
@@ -125,7 +173,9 @@ resendCodeBtn.addEventListener("click", async () => {
 
     if (ok) {
       alert("Verification code sent!");
+      await chrome.storage.local.set({ userEmail: email });
       showLogin1(email);
+      await updateUIState("UI_VERIFYCODE");
     } else {
       alert("Failed to send code");
     }
@@ -153,19 +203,35 @@ function showLoggedIn(email?: string) {
 }
 
 async function loadEvents() {
-  const storage = await chrome.storage.local.get(["accessToken"]);
-  const token = storage.accessToken;
-
-  console.log("TOKEN:", token);
-
-  if (!token) return;
-
   try {
-    const events = await fetchEvents(token);
-    populateEvents(events);
+    const storage = await chrome.storage.local.get(["accessToken", "eventId"]);
+    const token = storage?.accessToken as string | undefined;
+    const storedEventId = storage?.eventId as string | undefined;
+
+    // console.log("TOKEN:", token);
+
+    if (!token) {
+      console.warn("[Popup] No accessToken found in storage");
+      eventSelect.innerHTML = `<option>Please login first</option>`;
+      return;
+    }
+
+    try {
+      const events = await fetchEvents(token);
+      populateEvents(events);
+
+      // Restore previously selected event
+      if (storedEventId) {
+        eventSelect.value = storedEventId;
+        eventIdInput.value = storedEventId;
+      }
+    } catch (err) {
+      console.error("[Popup] Error fetching events:", err);
+      eventSelect.innerHTML = `<option>Error loading events</option>`;
+    }
   } catch (err) {
-    console.error(err);
-    eventSelect.innerHTML = `<option>Error loading events</option>`;
+    console.error("[Popup] Error accessing storage:", err);
+    eventSelect.innerHTML = `<option>Storage error</option>`;
   }
 }
 
@@ -188,15 +254,17 @@ function populateEvents(events: MyEvent[]) {
   });
 }
 
-eventSelect.addEventListener("change", () => {
+eventSelect.addEventListener("change", async () => {
   const selectedId = eventSelect.value;
   console.log("Selected Event ID:", selectedId);
   eventIdInput.value = selectedId;
+  await chrome.storage.local.set({ eventId: selectedId });
 });
 
 logoutBtn.addEventListener("click", async () => {
   await chrome.storage.local.remove(["accessToken", "userEmail"]);
   showLogin0();
+  await updateUIState("UI_SIGNIN");
 });
 
 
