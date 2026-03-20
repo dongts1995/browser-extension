@@ -202,7 +202,7 @@ function showLoggedIn(email?: string) {
   loadEvents();
 }
 
-async function loadEvents() {
+async function loadEvents(retryCount = 0, maxRetries = 3) {
   try {
     const storage = await chrome.storage.local.get(["accessToken", "eventId"]);
     const token = storage?.accessToken as string | undefined;
@@ -226,8 +226,22 @@ async function loadEvents() {
         eventIdInput.value = storedEventId;
       }
     } catch (err) {
-      console.error("[Popup] Error fetching events:", err);
-      eventSelect.innerHTML = `<option>Error loading events</option>`;
+      console.error("[Popup] Error fetching events (attempt", retryCount + 1, "of", maxRetries + 1, "):", err);
+
+      if (retryCount < maxRetries) {
+        const delay = Math.pow(2, retryCount) * 1000; // exponential backoff: 1s, 2s, 4s
+        console.log(`[Popup] Retrying in ${delay}ms...`);
+        eventSelect.innerHTML = `<option>Loading events... (retry ${retryCount + 1}/${maxRetries})</option>`;
+
+        setTimeout(() => {
+          loadEvents(retryCount + 1, maxRetries);
+        }, delay);
+      } else {
+        console.error("[Popup] Max retries reached, giving up");
+        await chrome.storage.local.remove(["accessToken", "eventId"]);
+        showLogin0();
+        await updateUIState("UI_SIGNIN");
+      }
     }
   } catch (err) {
     console.error("[Popup] Error accessing storage:", err);
@@ -259,6 +273,9 @@ eventSelect.addEventListener("change", async () => {
   console.log("Selected Event ID:", selectedId);
   eventIdInput.value = selectedId;
   await chrome.storage.local.set({ eventId: selectedId });
+
+  // Send message to background script with the selected eventId
+  chrome.runtime.sendMessage({ type: "EVENT_SELECTED", eventId: selectedId });
 });
 
 logoutBtn.addEventListener("click", async () => {

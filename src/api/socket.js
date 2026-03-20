@@ -1,10 +1,25 @@
 import io from "socket.io-client";
+import { compressAndEncodeImage } from "./image.js";
 export class SocketService {
     constructor() {
         this.socket = null;
-        this.isConnected = false;
+        this._isConnected = false;
         this.serverUrl = "wss://api.portals.now/";
         this.reconnectInterval = null;
+    }
+    get isConnected() {
+        return this._isConnected;
+    }
+    disconnect() {
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket = null;
+        }
+        this._isConnected = false;
+        if (this.reconnectInterval !== null) {
+            clearInterval(this.reconnectInterval);
+            this.reconnectInterval = null;
+        }
     }
     connect(accessToken, eventId) {
         this.socket = io(this.serverUrl, {
@@ -19,7 +34,7 @@ export class SocketService {
             reconnectionDelay: 1000,
         });
         this.socket.on("connect", () => {
-            this.isConnected = true;
+            this._isConnected = true;
             console.log("[Socket] Connected");
             if (this.reconnectInterval !== null) {
                 clearInterval(this.reconnectInterval);
@@ -27,17 +42,17 @@ export class SocketService {
             }
         });
         this.socket.on("disconnect", (reason) => {
-            this.isConnected = false;
+            this._isConnected = false;
             console.log("[Socket] Disconnected:", reason);
             this.startReconnect();
         });
         this.socket.on("connect_error", (err) => {
-            this.isConnected = false;
+            this._isConnected = false;
             console.log("[Socket] Connect error:", err);
             this.startReconnect();
         });
         this.socket.on("error", (err) => {
-            this.isConnected = false;
+            this._isConnected = false;
             console.log("[Socket] Error:", err);
             this.startReconnect();
         });
@@ -50,7 +65,7 @@ export class SocketService {
     startReconnect() {
         if (this.reconnectInterval)
             return;
-        this.reconnectInterval = window.setInterval(() => {
+        this.reconnectInterval = setInterval(() => {
             if (!this.isConnected && this.socket) {
                 console.log("[Socket] Reconnecting...");
                 this.socket.connect();
@@ -58,7 +73,7 @@ export class SocketService {
         }, 5000);
     }
     sendMessage(event, payload) {
-        if (this.isConnected && this.socket) {
+        if (this._isConnected && this.socket) {
             this.socket.emit(event, payload);
             console.log("[Socket] Emit:", event);
         }
@@ -66,5 +81,15 @@ export class SocketService {
             console.log("[Socket] Not connected");
             this.startReconnect();
         }
+    }
+    async emitSlideMovedNext(currentNotes, nextNotes, slideImageUrl) {
+        const nextPreview = await compressAndEncodeImage(slideImageUrl);
+        const payload = {
+            currentNotes,
+            nextNotes,
+            nextPreview,
+        };
+        console.log("[Emit] slide.move.next.desktop", payload);
+        this.sendMessage("slide.move.next.desktop", payload);
     }
 }

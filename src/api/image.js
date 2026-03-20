@@ -1,4 +1,4 @@
-export async function compressAndEncodeImage(url, quality = 0.85, maxWidth = 1024) {
+export async function compressAndEncodeImage(url, quality = 0.85, maxWidth = 512) {
     const res = await fetch(url);
     const blob = await res.blob();
     const bitmap = await createImageBitmap(blob);

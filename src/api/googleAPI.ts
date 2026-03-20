@@ -196,17 +196,17 @@ export async function getSlideIndexByObjectId(presentationId: string, objectId: 
 }
 
 /**
- * Get the slide thumbnail as a Base64 encoded string.
+ * Get the slide thumbnail URL.
  * Returns null if the request fails.
  */
-export async function getSlideThumbnailAsBase64(presentationId: string, objectId: string): Promise<string | null> {
+export async function getSlideThumbnailAsURL(presentationId: string, objectId: string): Promise<string | null> {
     const token = await ensureToken();
     if (!token) return null;
 
     const url = `https://slides.googleapis.com/v1/presentations/${presentationId}/pages/${objectId}/thumbnail`;
 
     try {
-        // First, fetch the thumbnail metadata to get the contentUrl
+        // Fetch the thumbnail metadata to get the contentUrl
         const res = await fetch(url, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -219,7 +219,6 @@ export async function getSlideThumbnailAsBase64(presentationId: string, objectId
         }
 
         const data = await res.json();
-        // debug
         console.log("Thumbnail metadata response:", data);
         const contentUrl = data.contentUrl;
         if (!contentUrl) {
@@ -227,21 +226,7 @@ export async function getSlideThumbnailAsBase64(presentationId: string, objectId
             return null;
         }
 
-        // Now, fetch the actual image from contentUrl
-        const imageRes = await fetch(contentUrl);
-        if (!imageRes.ok) {
-            console.error("Failed to fetch image:", imageRes.status, imageRes.statusText);
-            return null;
-        }
-
-        const buffer = await imageRes.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        const base64 = btoa(binary);
-        return base64;
+        return contentUrl;
     } catch (error) {
         console.error("Error fetching thumbnail:", error);
         return null;
