@@ -75,6 +75,7 @@ function showLogin0() {
     loginView1.classList.remove("hidden");
     loginView2.classList.add("hidden");
     loggedInView.classList.add("hidden");
+    chrome.runtime.sendMessage({ type: "LOGGED_OUT" });
 }
 sendCodeBtn.addEventListener("click", async () => {
     const email = emailInput.value.trim();
@@ -173,6 +174,8 @@ function showLoggedIn(email) {
         userEmailText.innerText = `Email: ${email}`;
     }
     loadEvents();
+    // Notify background script that user is logged in
+    chrome.runtime.sendMessage({ type: "LOGGED_IN", email });
 }
 async function loadEvents(retryCount = 0, maxRetries = 3) {
     try {
@@ -192,6 +195,7 @@ async function loadEvents(retryCount = 0, maxRetries = 3) {
             if (storedEventId) {
                 eventSelect.value = storedEventId;
                 eventIdInput.value = storedEventId;
+                chrome.runtime.sendMessage({ type: "EVENT_SELECTED", eventId: storedEventId });
             }
         }
         catch (err) {

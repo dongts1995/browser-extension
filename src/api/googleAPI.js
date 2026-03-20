@@ -82,7 +82,7 @@ export function parseSlidesUrl(url) {
  */
 export async function getActiveSlidesInfo() {
     return new Promise((resolve) => {
-        chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+        chrome.tabs.query({ active: true, lastFocusedWindow: false }, (tabs) => {
             const tab = tabs?.[0];
             if (!tab?.url)
                 return resolve(null);
