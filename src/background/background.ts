@@ -65,6 +65,8 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(
         const nextNotes = nextSlide?.notes || "";
         const thumbnailObjectId = nextSlide?.objectId || info.objectId;
 
+        await socketService.emitSlideMovedNext(currentNotes, nextNotes, "", true);
+
         const thumbnailURL = (await getSlideThumbnailAsURL(info.presentationId, thumbnailObjectId)) || "";
 
         if (signal.aborted) return;
