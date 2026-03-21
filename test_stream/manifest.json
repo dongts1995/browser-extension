@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "Slides Stream Test",
+    "version": "1.0",
+    "permissions": [
+        "tabCapture",
+        "activeTab",
+        "tabs",
+        "desktopCapture"
+    ],
+    "host_permissions": [
+        "https://docs.google.com/*"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    }
+}

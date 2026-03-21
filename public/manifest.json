@@ -3,7 +3,8 @@
   "name": "Slides Extension",
   "version": "1.0",
   "oauth2": {
-    "client_id": "66081486935-ikq6aiid7lf3piu5rtluduc4tepb1jfb.apps.googleusercontent.com",
+    // "client_id": "66081486935-ikq6aiid7lf3piu5rtluduc4tepb1jfb.apps.googleusercontent.com",
+    "client_id": "66081486935-9l72a2lbvrajn5pfnru90ihvq3i52rtj.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/presentations"
     ]
@@ -15,7 +16,8 @@
     "storage",
     "tabs",
     "identity",
-    "webNavigation"
+    "webNavigation",
+    "desktopCapture"
   ],
   "host_permissions": [
     "https://docs.google.com/presentation/*",
