@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "Slide Controller",
+    "version": "1.0",
+    "description": "Control Google Slides automatically",
+    "permissions": [
+        "scripting",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "https://docs.google.com/presentation/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    }
+}

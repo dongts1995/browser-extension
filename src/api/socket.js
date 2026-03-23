@@ -1,11 +1,13 @@
 import io from "socket.io-client";
 import { compressAndEncodeImage } from "./image.js";
 export class SocketService {
-    constructor() {
+    constructor(nextHandler, prevHandler) {
         this.socket = null;
         this._isConnected = false;
         this.serverUrl = "wss://api.portals.now/";
         this.reconnectInterval = null;
+        this.nextSlideHandler = nextHandler;
+        this.prevSlideHandler = prevHandler;
     }
     get isConnected() {
         return this._isConnected;
@@ -60,6 +62,14 @@ export class SocketService {
         // Cast to any to keep runtime behavior while satisfying TypeScript.
         this.socket.onAny((event, ...data) => {
             console.log("[Socket] Event:", event, data);
+            switch (event) {
+                case 'slide.move.next.desktop':
+                    this.nextSlideHandler();
+                    break;
+                case 'slide.move.prev.desktop':
+                    this.prevSlideHandler();
+                    break;
+            }
         });
     }
     startReconnect() {

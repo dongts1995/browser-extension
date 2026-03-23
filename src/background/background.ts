@@ -2,7 +2,17 @@
 import { SocketService } from "../api/socket";
 
 
-const socketService = new SocketService();
+let handleNextSlide = () => {
+  console.log("NEXT_SLIDE received");
+
+};
+
+let handlePrevSlide = () => {
+  console.log("PREV_SLIDE received");
+  // Similar logic for previous slide
+};
+
+const socketService = new SocketService(handleNextSlide, handlePrevSlide);
 let currentEventId: string | null = null;
 let isLoggedIn: boolean = false;
 // let isEventSelected: boolean = false;

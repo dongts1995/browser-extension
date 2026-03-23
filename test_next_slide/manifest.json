@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Slides Auto Next REAL",
+  "version": "1.0",
+  "permissions": ["debugger", "tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Start Auto Slide"
+  }
+}
