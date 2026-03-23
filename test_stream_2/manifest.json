@@ -1,0 +1,12 @@
+{
+    "manifest_version": 3,
+    "name": "Screen Share Dev",
+    "version": "1.0",
+    "permissions": [],
+    "host_permissions": [
+        "https://api.portals.now/*"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
