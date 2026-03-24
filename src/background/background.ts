@@ -2,14 +2,136 @@
 import { SocketService } from "../api/socket";
 
 
-let handleNextSlide = () => {
-  console.log("NEXT_SLIDE received");
+const DEBUGGER_PROTOCOL_VERSION = "1.3";
 
+const attachDebugger = (tabId: number): Promise<void> => {
+  console.log(`attachDebugger start for tabId=${tabId}`);
+  return new Promise((resolve, reject) => {
+    chrome.debugger.attach({ tabId }, DEBUGGER_PROTOCOL_VERSION, () => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        console.error(`attachDebugger failed for tabId=${tabId}`, error);
+        reject(new Error(`Debugger attach failed: ${error.message}`));
+      } else {
+        console.log(`attachDebugger success for tabId=${tabId}`);
+        resolve();
+      }
+    });
+  });
 };
 
-let handlePrevSlide = () => {
+const detachDebugger = (tabId: number): Promise<void> => {
+  console.log(`detachDebugger start for tabId=${tabId}`);
+  return new Promise((resolve, reject) => {
+    chrome.debugger.detach({ tabId }, () => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        console.error(`detachDebugger failed for tabId=${tabId}`, error);
+        reject(new Error(`Debugger detach failed: ${error.message}`));
+      } else {
+        console.log(`detachDebugger success for tabId=${tabId}`);
+        resolve();
+      }
+    });
+  });
+};
+
+const dispatchKeyEvent = (tabId: number, type: "keyDown" | "keyUp", key: string, code: string, vkCode: number) => {
+  console.log(`dispatchKeyEvent start tabId=${tabId} type=${type} key=${key} code=${code} vkCode=${vkCode}`);
+  return new Promise<void>((resolve, reject) => {
+    chrome.debugger.sendCommand(
+      { tabId },
+      "Input.dispatchKeyEvent",
+      {
+        type,
+        key,
+        code,
+        windowsVirtualKeyCode: vkCode,
+        nativeVirtualKeyCode: vkCode,
+      },
+      () => {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          console.error(`dispatchKeyEvent error tabId=${tabId} type=${type} `, error);
+          reject(new Error(`sendCommand Input.dispatchKeyEvent failed: ${error.message}`));
+        } else {
+          console.log(`dispatchKeyEvent success tabId=${tabId} type=${type} key=${key}`);
+          resolve();
+        }
+      }
+    );
+  });
+};
+
+const simulateSlideNavKey = async (tabId: number, key: "ArrowRight" | "ArrowLeft") => {
+  const keyCode = key === "ArrowRight" ? 39 : 37;
+  await attachDebugger(tabId);
+  try {
+    await dispatchKeyEvent(tabId, "keyDown", key, key, keyCode);
+    await dispatchKeyEvent(tabId, "keyUp", key, key, keyCode);
+  } finally {
+    await detachDebugger(tabId);
+  }
+};
+
+const findSlidesTab = async (): Promise<chrome.tabs.Tab | null> => {
+  // Try active tab first
+  const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (activeTabs && activeTabs.length > 0 && activeTabs[0].id) {
+    return activeTabs[0];
+  }
+
+  // Fallback: find a Google Slides tab
+  const slidesTabs = await chrome.tabs.query({ url: "*://docs.google.com/presentation/*" });
+  if (slidesTabs && slidesTabs.length > 0 && slidesTabs[0].id) {
+    return slidesTabs[0];
+  }
+
+  return null;
+};
+
+let handleNextSlide = async () => {
+  console.log("NEXT_SLIDE received");
+  let tab: chrome.tabs.Tab | null = ((await chrome.tabs.query({ active: true, currentWindow: true }))[0]) || null;
+  console.log("handleNextSlide active tab:", tab);
+  if (!tab || !tab.id) {
+    console.warn("No active tab found, trying to find slides tab...");
+    tab = await findSlidesTab();
+  }
+  if (!tab || !tab.id) {
+    console.error("No slides tab found for NEXT_SLIDE");
+    return;
+  }
+
+  try {
+    console.log(`handleNextSlide simulateSlideNavKey for tabId=${tab.id}`);
+    await simulateSlideNavKey(tab.id, "ArrowRight");
+    console.log("Simulated ArrowRight key pressed successfully");
+  } catch (err) {
+    console.error("Failed to simulate next slide key:", err);
+  }
+};
+
+let handlePrevSlide = async () => {
   console.log("PREV_SLIDE received");
-  // Similar logic for previous slide
+  let tab: chrome.tabs.Tab | null = ((await chrome.tabs.query({ active: true, currentWindow: true }))[0]) || null;
+  console.log("handlePrevSlide active tab:", tab);
+  if (!tab || !tab.id) {
+    console.warn("No active tab found, trying to find slides tab...");
+    tab = await findSlidesTab();
+  }
+  if (!tab || !tab.id) {
+    console.error("No slides tab found for PREV_SLIDE");
+    return;
+  }
+
+  try {
+    console.log(`handlePrevSlide simulateSlideNavKey for tabId=${tab.id}`);
+    await simulateSlideNavKey(tab.id, "ArrowLeft");
+    console.log("Simulated ArrowLeft key pressed successfully");
+  } catch (err) {
+    console.error("Failed to simulate prev slide key:", err);
+  }
 };
 
 const socketService = new SocketService(handleNextSlide, handlePrevSlide);

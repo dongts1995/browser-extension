@@ -1,29 +1,24 @@
+console.log("Slides Controller loaded");
+
+// Lắng nghe message từ popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message === "NEXT") {
+        nextSlide();
+    }
+
+    if (message === "PREV") {
+        prevSlide();
+    }
+});
+
 function nextSlide() {
     document.dispatchEvent(
-        new KeyboardEvent("keydown", {
-            key: "ArrowRight",
-            code: "ArrowRight",
-            keyCode: 39,
-            which: 39,
-            bubbles: true
-        })
+        new KeyboardEvent("keydown", { key: "ArrowRight" })
     );
 }
 
 function prevSlide() {
     document.dispatchEvent(
-        new KeyboardEvent("keydown", {
-            key: "ArrowLeft",
-            code: "ArrowLeft",
-            keyCode: 37,
-            which: 37,
-            bubbles: true
-        })
+        new KeyboardEvent("keydown", { key: "ArrowLeft" })
     );
 }
-
-// Nhận message từ background hoặc popup
-chrome.runtime.onMessage.addListener((msg) => {
-    if (msg.action === "next") nextSlide();
-    if (msg.action === "prev") prevSlide();
-});

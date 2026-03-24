@@ -1,15 +1,13 @@
 document.getElementById("next").onclick = () => {
-    chrome.runtime.sendMessage({ action: "next" });
+    sendCommand("NEXT");
 };
 
 document.getElementById("prev").onclick = () => {
-    chrome.runtime.sendMessage({ action: "prev" });
+    sendCommand("PREV");
 };
 
-document.getElementById("auto").onclick = () => {
-    chrome.runtime.sendMessage({ action: "startAuto" });
-};
-
-document.getElementById("stop").onclick = () => {
-    chrome.runtime.sendMessage({ action: "stopAuto" });
-};
+function sendCommand(command) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, command);
+    });
+}
